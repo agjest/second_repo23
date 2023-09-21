@@ -2,6 +2,7 @@
 title: "git branches"
 format: html
 editor: visual
+bibliography: references.bib
 ---
 
 ## Introduksjon
@@ -62,8 +63,28 @@ Aenean lacinia bibendum nulla sed consectetur.
 
 ## Litteraturstudie
 
+Aenean eu leo quam.
+Pellentesque ornare sem lacinia quam venenatis vestibulum.
+Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor.
+Maecenas faucibus mollis interdum.
+
+Morbi leo risus, porta ac consectetur ac, vestibulum at eros.
+Donec sed odio dui.
+Etiam porta sem malesuada magna mollis euismod.
+Donec sed odio dui.
+
+Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit.
+Aenean eu leo quam.
+Pellentesque ornare sem lacinia quam venenatis vestibulum.
+Maecenas sed diam eget risus varius blandit sit amet non magna.
+Maecenas faucibus mollis interdum.
+[@allaire2020]
+
 ## Analyse
 
 ## Resultater
 
 ## Konklusjon
+
+## Referanser
+
