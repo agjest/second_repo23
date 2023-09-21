@@ -4,12 +4,12 @@ format: html
 editor: visual
 ---
 
-Introduksjon
+## Introduksjon
 
-Litteraturstudie
+## Litteraturstudie
 
-Analyse
+## Analyse
 
-Resultater
+## Resultater
 
-Konklusjon
+## Konklusjon
