@@ -1,6 +1,6 @@
 ---
 title: "git branches"
-format: pdf
+format: html
 editor: visual
 ---
 
