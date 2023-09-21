@@ -1,0 +1,212 @@
+---
+title: "nycflight"
+format: html
+editor: visual
+---
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(nycflights13)
+```
+
+```{r}
+flights <- flights
+```
+
+```{r}
+class(dim(flights))
+```
+
+```{r}
+class(flights)
+```
+
+```{r}
+#| paged.print: false
+flights 
+```
+
+```{r}
+#| paged.print: false
+flights |> 
+  arrange(desc(month), desc(day))
+```
+
+```{r}
+flights  <- flights |> 
+  arrange(month, day, desc(dep_time))
+```
+
+```{r}
+#| paged.print: false
+flights |> 
+  tail()
+```
+
+```{r}
+#| paged.print: false
+flights |> 
+  filter(month == 1, day == 1) |> 
+  print(
+    n = 5, 
+    width = 80
+    )
+```
+
+```{r}
+summary(flights)
+```
+
+```{r}
+  flights %>% 
+  filter(month == 1, !(day %in% c(1, 15, 30))) %>% 
+  print(width = 70)
+```
+
+```{r}
+# or er |
+FALSE | FALSE
+```
+
+```{r}
+# and er &
+(TRUE & FALSE) | FALSE
+```
+
+```{r}
+TRUE & (FALSE | TRUE)
+```
+
+```{r}
+flights |> 
+  filter(month %in% c(4, 9)) |> 
+  nrow()
+```
+
+```{r}
+#| paged.print: false
+flights |> 
+  group_by(month) |> 
+  summarise(antall_flyvninger = n())
+```
+
+```{r}
+#| paged.print: false
+flights |> 
+  filter(month == 1) |> 
+  group_by(day) |> 
+  count() |> 
+  arrange(desc(n)) |> 
+  print(n = 1)
+```
+
+```{r}
+flights |> 
+  filter(day %in% c(1,2)) |> 
+  nrow()
+```
+
+```{r}
+flights |> 
+  filter(arr_delay >= 15 | arr_delay < 30) |>
+  select(arr_delay) |> 
+  nrow()
+```
+
+```{r}
+sum(is.na(flights$arr_delay))
+```
+
+```{r}
+# Dropper variabelen year
+flights <- flights |> 
+  select(-year)
+```
+
+```{r}
+flights <- flights |>
+  select(month:day, carrier, tailnum, everything())
+```
+
+```{r}
+# Henter inn flights på ny
+flights <- nycflights13::flights
+```
+
+```{r}
+flights <- flights |>
+  select(-year) |> 
+  select(
+    month:day, 
+    flyselskap = carrier, 
+    halenummer = tailnum, 
+    everything()
+    ) |> 
+  # setter tilbake til engelsk variabelnavn vha. rename()
+  rename(
+    carrier = flyselskap,
+    tailnum = halenummer
+  )
+```
+
+```{r}
+arr_delay_May <- flights |> 
+  select(day, month, arr_delay) |> 
+  filter(month == 5) |>
+  select(-month)
+```
+
+```{r}
+#| paged.print: false
+# Gjennomsnittlig ankomstforsikelse for dagene i Mai 2013
+flights |> 
+  filter(month == 5) |>
+  group_by(day) |> 
+  summarise(gjensnitt_f = round(
+    mean(
+    arr_delay, 
+    na.rm = TRUE
+    ), 
+    digits = 2
+  ),
+  median_f = median(arr_delay, na.rm = TRUE),
+  min_f = min(arr_delay, na.rm = TRUE),  
+  maks_f = max(arr_delay, na.rm = TRUE),
+  total_f = sum(arr_delay, na.rm = TRUE)
+  ) |> 
+  print(n = 31)
+```
+
+```{r}
+flights <- flights %>%
+  select(month:day, ends_with("delay"), distance, air_time) %>%
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = (distance/air_time) * 60
+    ) %>%
+  select(month:day, gain, everything()) %>%
+  arrange(gain)
+head(flights, n = 5) 
+```
+
+```{r}
+my_data <- flights %>%
+    transmute(
+    gain = dep_delay - arr_delay,
+    speed = (distance/air_time) * 60
+    ) %>%
+  arrange(gain)
+head(my_data, n = 3)
+```
+
+```{r}
+alt_my_data <- flights %>%
+    mutate(
+    gain = dep_delay - arr_delay,
+    speed = (distance/air_time) * 60
+    ) %>%
+  select(gain, speed) |> 
+  arrange(gain)
+head(alt_my_data, n = 3)
+```

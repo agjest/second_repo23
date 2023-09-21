@@ -1,0 +1,73 @@
+---
+title: "Data Transformations"
+format: html
+editor: visual
+---
+
+```{r}
+#| label: setup
+library(tidyverse)
+```
+
+```{r}
+#| paged.print: false
+mtcars
+```
+
+```{r}
+#| paged.print: false
+mtcars |> 
+  as_tibble() %>% 
+  arrange(cyl, hp) |> 
+  print(n = 32)
+```
+
+```{r}
+#| paged.print: false
+mtcars |> 
+  as_tibble(rownames = "model") |> 
+  arrange(cyl) |> 
+  print(n = 45)
+```
+
+```{r}
+#| paged.print: false
+my_mtcars <- mtcars |> 
+  as_tibble(rownames = "model") |> 
+  select(model:wt) |> 
+  select(model, vekt = wt, everything()) |> 
+  arrange(cyl, desc(model)) |> 
+  print(n = 32)
+```
+
+```{r}
+#| paged.print: false
+my_mtcars
+```
+
+```{r}
+my_mtcars |> 
+  filter(cyl == 6) |> 
+  select(model) |> 
+  arrange(model) |>
+  pull()
+```
+
+```{r}
+my_mtcars |> 
+  group_by(cyl) |>
+  summarise(mean_disp = round(mean(disp), digits = 1))
+```
+
+```{r}
+my_mtcars <- my_mtcars |>
+  mutate(
+    hp_vs_disp = hp/disp
+  )
+```
+
+```{r}
+my_mtcars |> 
+  group_by(cyl) |> 
+  summarise(mean_hp_vs_disp = round(mean(hp_vs_disp), digits = 3))
+```

@@ -9,7 +9,10 @@ editor: visual
 #| message: false
 #| output: false
 library(tidyverse)
+library(nycflights13)
 library(ggpubr)
+library(readxl)
+library(PxWebApiData)
 ```
 
 ## Intro ggplot
@@ -49,14 +52,483 @@ ggarrange(gg1, gg2,
 ggplot() +
   geom_point(
     mapping = aes(x = disp, y = mpg, 
-                  shape = factor(cyl),
-                  colour = factor(cyl)
+                  colour = factor(am),
+                  size = qsec,
+                  alpha = wt,
+                  shape = factor(cyl)
                   ), 
     data = mtcars
     )
 ```
 
 ```{r}
+ggplot() +
+  geom_point(data = mtcars,
+             mapping = aes(x = disp, y = mpg, colour = factor(cyl), alpha = 3.6*(0.25*1609.347)/qsec,
+                           shape = factor(ifelse(am, "Man", "Aut"))), size = 4) +
+  labs(colour = "cyl", alpha = "speed\n(km/h)", shape = "trans-\nmission")
+```
+
+Bedre formatert kode
+
+```{r}
+ggplot() +
+  geom_point(
+    data = mtcars,
+    mapping = aes(
+      x = disp, 
+      y = mpg, 
+      colour = factor(cyl), 
+      alpha = 3.6*(0.25*1609.347)/qsec,
+      shape = factor(ifelse(am, "Man", "Aut"))
+      ), 
+    size = 4
+    ) +
+  labs(
+    colour = "cyl", 
+    alpha = "speed\n(km/h)", 
+    shape = "trans-\nmission"
+    )
+```
+
+```{r}
 ggplot(data = mtcars, mapping = aes(x = disp, y = mpg)) +
   geom_point()
+```
+
+## Andre plots
+
+```{r}
+hist(mtcars$mpg, breaks = 10)
+```
+
+```{r}
+mtcars |> 
+  select(mpg) |> 
+  ggplot() +
+  geom_histogram(mapping = aes(x = mpg), bins = 12)
+```
+
+Exercise
+
+```{r}
+#| echo: false
+ggplot() +
+  geom_point(data = mtcars, mapping = aes(x = disp, y = mpg, colour = factor(cyl), size = 3.6*(0.25*1609.347)/qsec, shape = factor(ifelse(am, "Man", "Aut")))) +
+  labs(colour = "cyl", size = "speed\n(km/h)", shape = "trans-\nmission")
+```
+
+```{r}
+#| echo: false
+gg1 <- ggplot() +
+  geom_point(data = mtcars, mapping = aes(x = disp, y = mpg, size = 3.6*(0.25*1609.347)/qsec, shape = factor(ifelse(am, "Man", "Aut"))), colour = "Black", stroke = 2, show.legend = FALSE)
+
+gg2 <- gg1 +
+  geom_point(data = mtcars, mapping = aes(x = disp, y = mpg, colour = factor(cyl), size = 3.6*(0.25*1609.347)/qsec, shape = factor(ifelse(am, "Man", "Aut")))) +
+  labs(colour = "cyl", size = "speed\n(km/h)", shape = "trans-\nmission")
+```
+
+```{r}
+gg2
+```
+
+```{r}
+gg2 +
+geom_smooth(
+    data = mtcars, 
+    mapping = aes(x = disp, y = mpg),
+    span = 0.5,
+    level = 0.99
+    ) +
+  geom_smooth(
+    data = mtcars, 
+    mapping = aes(x = disp, y = mpg),
+    span = 0.5,
+    level = 0.95
+    ) +
+  geom_smooth(
+    data = mtcars, 
+    mapping = aes(x = disp, y = mpg),
+    method = lm,
+    se = FALSE,
+    colour = "red"
+  )
+```
+
+```{r}
+gg2 +
+  geom_smooth(
+    data = mtcars, 
+    mapping = aes(x = disp, y = mpg),
+    method = lm,
+    colour = "Blue",
+    se = FALSE
+    ) +
+  # robust lm
+  geom_smooth(
+    data = mtcars, 
+    mapping = aes(x = disp, y = mpg),
+    method = MASS::rlm, 
+    colour = 'Red', 
+    se = FALSE
+    )
+```
+
+```{r}
+ggplot(
+  data = mtcars, 
+  mapping = aes(
+    x = disp, 
+    y = mpg
+    )
+  ) +
+  geom_point() +
+  geom_smooth(
+    method = "lm", 
+    se = FALSE
+    ) +
+  # robust lm
+  geom_smooth(
+    method = MASS::rlm, 
+    colour = 'Red', 
+    se = FALSE
+    )
+```
+
+```{r}
+ggplot(
+  data = mtcars, 
+  mapping = aes(
+    x = hp, 
+    y = 1609.347/(2*qsec^2)
+    )
+  ) +
+  facet_wrap(~cut_number(wt, n =3)) +
+  geom_point(
+    aes(colour = cut_number(
+      wt, 
+      n = 3)
+      )
+    ) +
+  geom_smooth(
+    mapping = aes(colour = cut_number(
+      wt, 
+      n = 3)
+      ),
+    method = "lm", 
+    se = FALSE
+    )
+```
+
+```{r}
+#new dataframe to use for the grey points
+hp_acc <- data.frame(
+  hp = mtcars$hp, 
+  acc = 1609.347/(2*mtcars$qsec^2)
+  )
+
+ggplot(
+  data = mtcars, 
+  mapping = aes(x = hp, y = 1609.347/(2*qsec^2))
+  ) +
+  geom_point(
+    data = hp_acc, 
+    mapping = aes(x = hp, y = acc), colour = "grey80"
+    ) +
+  facet_wrap(
+    ~cut_number(
+      wt, 
+      n =3 , 
+      labels = c("Light", "Medium", "Heavy")
+      )
+    ) +
+  geom_point(
+    mapping = aes(colour = cut_number(
+      wt, 
+      n = 3, 
+      labels = c("Light", "Medium", "Heavy")
+      )
+      ),
+    show.legend = TRUE
+    ) +
+  geom_smooth(
+      mapping = aes(colour = cut_number(
+      wt, 
+      n = 3, 
+      labels = c("Light", "Medium", "Heavy")
+      )
+      ),
+    method = "lm", 
+    se = FALSE
+    ) +
+  labs(
+    y = "Mean acceleration (m/s^2)", 
+    colour = "Weight"
+    )
+```
+
+```{r}
+ggplot(
+  data = mtcars, 
+  mapping = aes(x = hp, y = 1609.347/(2*qsec^2))
+  ) +
+  geom_point(
+    data = hp_acc, 
+    mapping = aes(x = hp, y = acc), 
+    colour = "grey80"
+    ) +
+  facet_grid(
+    factor(cyl)~cut_number(
+      wt, 
+      n =3 , 
+      labels = c("Light", "Medium", "Heavy"))
+    ) +
+  geom_point(
+    mapping = aes(
+      colour = cut_number(
+        wt, 
+        n = 3, 
+        labels = c("Light", "Medium", "Heavy")
+        )
+      ),
+    show.legend = FALSE
+    ) +
+  geom_smooth(
+    method = "lm", 
+    se = FALSE
+    ) +
+  labs(
+    y = "Mean acceleration", 
+    colour = "Weight"
+    )
+```
+
+```{r}
+X10540 <- read_excel("10540_rog_99_02.xlsx", 
+    sheet = "RegHeltLedige", skip = 2)
+```
+
+```{r}
+X10540_rog_99_02_csv <- read_delim(
+  file = "10540_rog_99_02.csv", 
+  delim = ";", 
+  escape_double = FALSE, 
+  locale = locale(
+    date_names = "nb", 
+    encoding = "ISO-8859-1"
+    ), 
+  trim_ws = TRUE, 
+  skip = 1,
+  show_col_types = FALSE
+  )
+```
+
+```{r}
+
+```
+
+```{r}
+X10540_20230907_145530 <- read_excel("10540_20230907-145530.xlsx", 
+    skip = 3)
+```
+
+```{r}
+X10540_rot_hoyre <- read_delim(
+  file = "10540_rot_hoyre.csv", 
+  delim = ";", 
+  escape_double = FALSE, 
+  locale = locale(
+    date_names = "nb", 
+    decimal_mark = ",", 
+    grouping_mark = ".", 
+    encoding = "ISO-8859-1"
+    ), 
+  trim_ws = TRUE, 
+  skip = 1
+  )
+```
+
+```{r}
+X10540_rot_hoyre <- read_delim(
+  file = "10540_rot_hoyre.csv", 
+  delim = ";", 
+  escape_double = FALSE, 
+  col_types = cols(
+    `1101 Eigersund` = col_double(), 
+    `1102 Sandnes (-2019)` = col_double(), 
+    `1103 Stavanger` = col_double(), 
+    `1106 Haugesund` = col_double(), 
+    `1111 Sokndal` = col_double()
+    ), 
+  locale = locale(
+    date_names = "nb", 
+    encoding = "ISO-8859-1"
+    ), 
+  trim_ws = TRUE, 
+  skip = 1
+  )
+```
+
+```{r}
+unemp99to02 <- ApiData12(
+  "http://data.ssb.no/api/v0/en/table/10540",
+  Region = list("11*"),
+  Tid = paste(
+    rep(1999:2002, each = 12), 
+    "M",
+    sprintf("%02d", 1:12), 
+    sep = ""
+    ),
+  Alder = "15-29"
+  )
+```
+
+## PxWebApiData
+
+```{r}
+metadata_10540_no <- ApiData(
+  "https://data.ssb.no/api/v0/no/table/10540/",
+  returnMetaFrames = TRUE
+  )
+```
+
+```{r}
+unemp99to02 <- ApiData12(
+  "http://data.ssb.no/api/v0/en/table/10540",
+Region = c("1101", "1102", "1103", "1106", "1111", "1112", "1114", "1119", "1120", "1121", "1122", "1124", "1127", "1129", "1130", "1133", "1134", "1135", "1141", "1142", "1144", "1145", "1146", "1149", "1151", "1154"),
+  Tid = c(paste(
+    rep(1999:2002, each = 12), 
+    "M",
+    sprintf("%02d", 1:12), 
+    sep = "")
+    ),
+  Alder = "15-29"
+  )
+```
+
+```{r}
+unemp99to02 <- ApiData12(
+  "http://data.ssb.no/api/v0/en/table/10540",
+  # Have not been able to specify more complex regions
+  # regex: ",\n\s*" replace ", "
+Region = c("1101", "1102", "1103", "1106", "1111", "1112", "1114", "1119", "1120", "1121", "1122", "1124", "1127", "1129", "1130", "1133", "1134", "1135", "1141", "1142", "1144", "1145", "1146", "1149", "1151", "1154"),
+  Tid = c(paste(
+    rep(1999:2002, each = 12), 
+    "M",
+    sprintf("%02d", 1:12), 
+    sep = "")
+    ),
+  Alder = "15-29"
+  )
+```
+
+Hvordan vi valigvis jobber
+
+```{r}
+#| label: StudyArea
+knr = c("1101", "1102", "1103", "1106", "1114", "1119", "1121")
+```
+
+```{r}
+unemp99to02_StudyArea <- ApiData12(
+  "http://data.ssb.no/api/v0/en/table/10540",
+  Region = knr,
+  Tid = c(paste(
+    rep(1999:2002, each = 12), 
+    "M",
+    sprintf("%02d", 1:12), 
+    sep = "")
+    ),
+  Alder = "15-29"
+  )
+```
+
+```{r}
+paste(
+    rep(1999:2002, each = 12), 
+    "M",
+    sprintf("%02d", 1:12), 
+    sep = ""
+    )
+```
+
+```{r}
+metadata_10540_en <- ApiData(
+  "http://data.ssb.no/api/v0/en/table/10540",
+  returnMetaFrames = TRUE
+  )
+```
+
+## Transforming Data
+
+```{r}
+set.seed(1234)
+res_mean_rnorm_3dig_string <- 
+  rnorm(n = 10, mean = 0, sd = 1) %>%
+  mean() %>%
+  round(digits = 3) %>% 
+  # The dot '.' is to show where the content of the pipe should be put
+  paste("Result:", .,sep = "")
+res_mean_rnorm_3dig_string
+```
+
+```{r}
+set.seed(1234)
+res_mean_rnorm_3dig_string <- 
+  rnorm(n = 10, mean = 0, sd = 1) %>%
+  mean() %>%
+  round(digits = 3) %>% 
+  # The dot '.' is to show where the content of the pipe should be put
+  paste("Result:", .)
+res_mean_rnorm_3dig_string
+```
+
+```{r}
+#| eval: false
+set.seed(1234)
+res_mean_rnorm_3dig_string <- 
+  rnorm(n = 10, mean = 0, sd = 1) |> 
+  mean() |> 
+  round(digits = 3) |> 
+  # The dot '.' is to show where the content of the pipe should be put
+  paste("Result:", .)
+res_mean_rnorm_3dig_string
+```
+
+Min anbefaling: Hvis du trenger å angi hvor innholdet i pipe-en skal komme bruk, %\>% (tilgjengelig via tidyverse event. magrittr) istedenfor \|\>
+
+```{r}
+set.seed(1234)
+res_mean_rnorm_3dig_string <- rnorm(n = 10, mean = 0, sd = 1) |>
+  mean() |> # note %>% not |> end next line
+  round(digits = 3) %>%
+  # The dot '.' is to show where the content of the pipe should be put
+  paste("Result:", .)
+res_mean_rnorm_3dig_string
+```
+
+Vis bruk av styler
+
+```{r}
+set.seed(1234)
+res_mean_rnorm_3dig_string <-
+  rnorm(n = 10, mean = 0, sd = 1) |>
+  mean() |> # note %>% not |> end next line
+  round(digits = 3) %>%
+  # The dot '.' is to show where the content of the pipe should be put
+  paste("Result:", .)
+res_mean_rnorm_3dig_string
+```
+
+```{r}
+set.seed(1234)
+res_mean_rnorm_3dig_string  <- rnorm(
+  n = 10,
+  mean = 0,
+  sd = 1
+) %>%
+  mean() %>%
+  round(digits = 3) %>% 
+  paste("Result:", .) 
+res_mean_rnorm_3dig_string
 ```
